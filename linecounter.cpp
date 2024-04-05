@@ -3,6 +3,7 @@
 #include <string>
 #include <cstring>
 #include <filesystem>
+#include <vector>
 
 // use C++20 or C++17
 
@@ -25,7 +26,11 @@ struct DirectoryIndex {
 	// Stores the paths of text files (*.txt) in directory and their line count
 	vector<pair<fs::path, int>> textFiles;
 
+	// Constructor for C-String path
 	DirectoryIndex(const char * dirPath) : basePath(dirPath) {}
+
+	// Constructor for filesystem::path
+	DirectoryIndex(fs::path dirPath) : basePath(dirPath) {}
 
 	void enumerateDirectory() {
 		pair<fs::path, int> tempPair;
@@ -34,6 +39,11 @@ struct DirectoryIndex {
 		if (!(fs::exists(basePath))) {
 			std::cout << "path does not exist" << std::endl;
 			throw 1;
+		}
+
+		// If basePath points to a file, set basePath to its parent directory
+		if (fs::is_regular_file(basePath)) {
+			basePath = basePath.parent_path();
 		}
 
 		// Iterate over Directory
@@ -62,8 +72,11 @@ struct DirectoryIndex {
 class Linecounter {
 
 public:
-
 	Linecounter(const char* dirPath) : directoryIndex(dirPath) {
+		totalLineCount = 0;
+	}
+
+	Linecounter(fs::path dirPath) : directoryIndex(dirPath) {
 		totalLineCount = 0;
 	}
 
@@ -99,6 +112,9 @@ private:
 
 			// Save linecount to pair (pair.second)
 			i.second = tempLinecount;
+
+			// Update total line count
+			this->totalLineCount += tempLinecount;
 
 		}
 	}
@@ -141,8 +157,14 @@ private:
 
 	string format_output() {
 		string str;
-		unsigned totalLines = 0;
 		char * tempCastingPointer;
+
+		str += "Path: ";
+		tempCastingPointer = _convertWcharToChar(directoryIndex.basePath.c_str());
+		str += tempCastingPointer;
+		str += "\n";
+		str += "\n";
+		delete tempCastingPointer; // Deallocate temporary typecast
 
 		for (auto& i : directoryIndex.textFiles) {
 			//str += '\t';
@@ -152,20 +174,18 @@ private:
 			str += tempCastingPointer;
 			str += ": ";
 
-			str += to_string(i.second); // Linecount
+			str += to_string(i.second); // Line count
 			str += " Lines";
 			
 			str += "\n";
 			delete tempCastingPointer; // Deallocate temporary typecast
-			totalLines += i.second;
 		}
 
 		str += "-----------------------------";
 		str += "\n";
 		str += "Total Lines: ";
-		str += to_string(totalLines);
+		str += to_string(this->totalLineCount);
 
-		this->totalLineCount = totalLines;
 		this->formattedConsoleOut = str;
 		return str;
 	}
