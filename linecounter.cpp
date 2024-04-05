@@ -55,7 +55,13 @@ struct DirectoryIndex {
 			}
 
 			// If item is a .txt file, path is saved in textFiles
-			if (item.path().extension() == ".txt") {
+			if (item.path().extension() == ".txt" ||
+				item.path().extension() == ".c"	  || 
+				item.path().extension() == ".h"   ||
+				item.path().extension() == ".cpp" ||  
+				item.path().extension() == ".hpp" || 
+				item.path().extension() == ".ino"   )
+			{
 				tempPair.first = item.path();
 				tempPair.second = 0;
 
@@ -173,6 +179,13 @@ private:
 			tempCastingPointer = _convertWcharToChar(i.first.filename().c_str()); // Filename
 			str += tempCastingPointer;
 			str += ": ";
+
+			// todo: tab formatting sucks 
+			if (strlen(tempCastingPointer) < 13) {
+				str += '\t';
+			}
+
+			str += '\t';
 
 			str += to_string(i.second); // Line count
 			str += " Lines";
