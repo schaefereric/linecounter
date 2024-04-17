@@ -16,11 +16,22 @@ using namespace std;
 
 namespace fs = filesystem;
 
+#ifdef _WIN32
+// wcstombs_s
 static char* _convertWcharToChar(const wchar_t* vIn) {
 	char* vOut = new char[wcslen(vIn) + 1];
 	wcstombs_s(NULL, vOut, wcslen(vIn) + 1, vIn, wcslen(vIn) + 1);
 	return vOut;
 }
+
+#else
+// wcstombs
+static char* _convertWcharToChar(const wchar_t* vIn) {
+	char* vOut = new char[wcslen(vIn) + 1];
+	wcstombs(vOut, vIn, wcslen(vIn) + 1);
+	return vOut;
+}
+#endif
 
 // Indexes all .txt and c/cpp source files in directory
 struct DirectoryIndex {
@@ -301,10 +312,17 @@ private:
 			// Update total line count
 			this->totalLineCount += tempLinecount;
 
+#ifdef _WIN32
 			// If length of filename is higher than any previous file counted, update counter
 			if (static_cast<int>(wcslen(i.first.filename().c_str())) > this->longestFileNameCount) {
 				this->longestFileNameCount = static_cast<int>(wcslen(i.first.filename().c_str()));
 			}
+#else
+			// If length of filename is higher than any previous file counted, update counter
+			if (static_cast<int>(strlen(i.first.filename().c_str())) > this->longestFileNameCount) {
+				this->longestFileNameCount = static_cast<int>(strlen(i.first.filename().c_str()));
+			}
+#endif
 
 		}
 	}
@@ -350,20 +368,34 @@ private:
 		char * tempCastingPointer;
 
 		sstr << "Path: ";
+
+		#ifdef _WIN32
 		tempCastingPointer = _convertWcharToChar(directoryIndex.basePath.c_str());
 		sstr << tempCastingPointer;
+		delete[] tempCastingPointer; // Deallocate temporary typecast
+		#else
+		sstr << directoryIndex.basePath.c_str();
+		#endif
 
 		sstr << "\n";
 		sstr << "\n";
-		delete[] tempCastingPointer; // Deallocate temporary typecast
 
 		for (auto& i : directoryIndex.textFiles) {
+			#ifdef _WIN32
 			tempCastingPointer = _convertWcharToChar(i.first.filename().c_str()); // Filename typecast 
-
 			sstr << left << "Lines in " << tempCastingPointer << ": ";
+			delete[] tempCastingPointer; // Deallocate temporary typecast
+			#else
+			sstr << left << "Lines in " << i.first.filename().c_str();
+			#endif
 			
 			// Calculate how much whitespace is needed for proper column formatting
+			#ifdef _WIN32
 			int amountOfWhitespace = this->longestFileNameCount - static_cast<int>(wcslen(i.first.filename().c_str()));
+			#else
+			int amountOfWhitespace = this->longestFileNameCount - static_cast<int>(strlen(i.first.filename().c_str()));
+			#endif
+
 			for (int n = 0; n <= amountOfWhitespace; n++) {
 				sstr << " ";
 			}
@@ -371,7 +403,6 @@ private:
 			sstr << to_string(i.second) << " Lines";
 
 			sstr << "\n";
-			delete[] tempCastingPointer; // Deallocate temporary typecast
 		}
 
 		sstr << "-----------------------------";

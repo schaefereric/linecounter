@@ -1,19 +1,27 @@
 CC  = g++
-CFLAGS = -Wall -g -municode
+CFLAGS = -Wall -g
 CPP_STANDARD = -std=c++20
 
-all: linecounter
-
-linecounter.o: linecounter.cpp
-	$(CC) $(CPP_STANDARD) $(CFLAGS) -c linecounter.cpp
+all: linecounter_win32
 
 main.o: main.cpp
 	$(CC) $(CPP_STANDARD) $(CFLAGS) -c main.cpp
 
-linecounter: linecounter.o main.o
+linecounter_win32.o: linecounter.cpp
+	$(CC) $(CPP_STANDARD) $(CFLAGS) -municode -c linecounter.cpp -o $@
+
+linecounter_linux.o: linecounter.cpp
+	$(CC) $(CPP_STANDARD) $(CFLAGS) -c linecounter.cpp -o $@
+
+linecounter_win32: linecounter_win32.o main.o
 	@echo "Linking application"
 	@echo
-	$(CC) $(CPP_STANDARD) $(CFLAGS) main.o linecounter.o -o $@
+	$(CC) $(CPP_STANDARD) $(CFLAGS) main.o linecounter_win32.o -o $@
+
+linecounter_linux: linecounter_linux.o main.o
+	@echo "Linking application"
+	@echo
+	$(CC) $(CPP_STANDARD) $(CFLAGS) main.o linecounter_linux.o -o $@
 
 clean:
 	@echo "Removing build files"
