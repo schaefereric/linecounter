@@ -2,7 +2,7 @@ CC  = g++
 CFLAGS = -Wall -g
 CPP_STANDARD = -std=c++20
 
-all: linecounter_win32
+all: linecounter_linux
 
 main.o: main.cpp
 	$(CC) $(CPP_STANDARD) $(CFLAGS) -c main.cpp
@@ -26,4 +26,9 @@ linecounter_linux: linecounter_linux.o main.o
 clean:
 	@echo "Removing build files"
 	@echo
-	rm -rf main.o linecounter.o linecounter.exe
+	rm -rf main.o linecounter_linux.o linecounter_linux
+
+cleanWin32:
+	@echo "Removing build files"
+	@echo
+	rm -rf main.o linecounter_win32.o linecounter_win32.exe
